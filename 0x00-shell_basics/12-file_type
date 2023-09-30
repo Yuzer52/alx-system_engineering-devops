@@ -1,2 +1,3 @@
 #!/bin/bash
-cat /tmp/iamafile
+iamafile=$(file -b /temp/iamafile)
+echo "The type of the file 'iamafile' is: $iamafile"
