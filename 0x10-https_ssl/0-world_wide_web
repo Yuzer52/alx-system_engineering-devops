@@ -1,24 +1,19 @@
 #!/usr/bin/env bash
-### Displays information about subdomains
-### $1 = domain | $2 = subdomain
-### Output: The subdomain [SUB_DOMAIN] is a [RECORD_TYPE] record and points to [DESTINATION]
-# shellcheck disable=SC2086
+#Configure domain zone so that the subdomain www points to your load-balancer IP
+#shellcheck disable=SC2059
+subdomain()
+{
+    RECORD_TYPE=$(dig "$1" | awk '/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]/{print $4}')
+    DEST=$(dig "$1" | awk '/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]/{print $5}')
+    echo The subdomain "$2" is a "$RECORD_TYPE" record and points to "$DEST"
+}
 
-if [  $# == 2  ]; then
-    var_rec=$(dig $2.$1 | grep -A1 'ANSWER SECTION:' | awk '{print $4}' | sed '/./,$!d')
-    var_ip=$(dig $2.$1 | grep -A1 'ANSWER SECTION:' | awk '{print $5}' | sed '/./,$!d')
-    echo "The subdomain $2 is a $var_rec record and points to $var_ip"
+if [ "$2" ]
+then
+    subdomain "$2.$1" "$2"
 else
-    var_rec=$(dig www.$1 | grep -A1 'ANSWER SECTION:' | awk '{print $4}' | sed '/./,$!d')
-    var_ip=$(dig www.$1 | grep -A1 'ANSWER SECTION:' | awk '{print $5}' | sed '/./,$!d')
-    echo "The subdomain www is a $var_rec record and points to $var_ip"
-    var_rec=$(dig lb-01.$1 | grep -A1 'ANSWER SECTION:' | awk '{print $4}' | sed '/./,$!d')
-    var_ip=$(dig lb-01.$1 | grep -A1 'ANSWER SECTION:' | awk '{print $5}' | sed '/./,$!d')
-    echo "The subdomain lb-01 is a $var_rec record and points to $var_ip"
-    var_rec=$(dig web-01.$1 | grep -A1 'ANSWER SECTION:' | awk '{print $4}' | sed '/./,$!d')
-    var_ip=$(dig web-01.$1 | grep -A1 'ANSWER SECTION:' | awk '{print $5}' | sed '/./,$!d')
-    echo "The subdomain web-01 is a $var_rec record and points to $var_ip"
-    var_rec=$(dig web-02.$1 | grep -A1 'ANSWER SECTION:' | awk '{print $4}' | sed '/./,$!d')
-    var_ip=$(dig web-02.$1 | grep -A1 'ANSWER SECTION:' | awk '{print $5}' | sed '/./,$!d')
-    echo "The subdomain web-02 is a $var_rec record and points to $var_ip"
+    subdomain "www.$1" www
+    subdomain "lb-01.$1" lb-01
+    subdomain "web-01.$1" web-01
+    subdomain "web-02.$1" web-02
 fi
